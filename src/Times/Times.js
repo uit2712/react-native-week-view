@@ -1,15 +1,16 @@
-import React from 'react';
+import { Text, View } from 'react-native';
+
 import PropTypes from 'prop-types';
-import { View, Text } from 'react-native';
-import styles from './Times.styles';
+import React from 'react';
 import { getTimeLabelHeight } from '../utils';
+import styles from './Times.styles';
 
 const Times = ({ times, hoursInDisplay, timeStep, textStyle }) => {
   const height = getTimeLabelHeight(hoursInDisplay, timeStep);
   return (
     <View style={styles.columnContainer}>
-      {times.map((time) => (
-        <View key={time} style={[styles.label, { height }]}>
+      {times.map((time, index) => (
+        <View key={`${time} ${index}`} style={[styles.label, { height }]}>
           <Text style={[styles.text, textStyle]}>{time}</Text>
         </View>
       ))}
