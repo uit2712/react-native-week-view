@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 const styles = StyleSheet.create({
   columnContainer: {
     paddingTop: 10,
-    width: 60,
+    minWidth: 60,
   },
   label: {
     flex: -1,
