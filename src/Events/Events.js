@@ -203,7 +203,7 @@ class Events extends PureComponent {
     dateTime.setHours(roundedHour)
     dateTime.setMinutes((hour - roundedHour) * 60)
     let coeff = 1000 * 60 * minutesToRound;
-    const result = new Date(Math.round(dateTime.getTime() / coeff) * coeff);
+    const result = new Date(Math.floor(dateTime.getTime() / coeff) * coeff);
 
     return {
       hour: result.getHours(),
