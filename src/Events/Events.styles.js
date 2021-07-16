@@ -1,7 +1,8 @@
-import { StyleSheet } from 'react-native';
 import { CONTAINER_WIDTH, CONTENT_OFFSET } from '../utils';
 
-const GREY_COLOR = '#E9EDF0';
+import { StyleSheet } from 'react-native';
+
+const GREY_COLOR = '#00000029';
 
 const styles = StyleSheet.create({
   container: {
@@ -15,9 +16,9 @@ const styles = StyleSheet.create({
   timeLabelLine: {
     height: 1,
     backgroundColor: GREY_COLOR,
-    position: 'absolute',
-    right: 0,
-    left: 0,
+    // position: 'absolute',
+    // right: 0,
+    // left: 0,
   },
   event: {
     flex: 1,

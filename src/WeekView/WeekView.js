@@ -365,6 +365,7 @@ export default class WeekView extends Component {
       nowLineColor,
       isShowHeader,
       isShowTitle,
+      totalGridLinesPerHour,
     } = this.props;
     const { currentMoment, initialDates } = this.state;
     const times = this.calculateTimes(timeStep);
@@ -446,6 +447,7 @@ export default class WeekView extends Component {
                     rightToLeft={rightToLeft}
                     showNowLine={showNowLine}
                     nowLineColor={nowLineColor}
+                    totalLinesPerHour={totalGridLinesPerHour}
                   />
                 );
               }}

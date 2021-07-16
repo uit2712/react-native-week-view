@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Animated } from 'react-native';
-import PropTypes from 'prop-types';
+import { Animated, View } from 'react-native';
+import { CONTENT_OFFSET, minutesToYDimension } from '../utils';
 
-import { minutesToYDimension, CONTENT_OFFSET } from '../utils';
+import PropTypes from 'prop-types';
+import React from 'react';
 import styles from './NowLine.styles';
 
 const UPDATE_EVERY_MILLISECONDS = 60 * 1000; // 1 minute

@@ -1,22 +1,21 @@
-import React, { PureComponent } from 'react';
-import PropTypes from 'prop-types';
-import { View, TouchableWithoutFeedback } from 'react-native';
-import moment from 'moment';
-import memoizeOne from 'memoize-one';
-
-import NowLine from '../NowLine/NowLine';
-import Event from '../Event/Event';
 import {
   CONTAINER_HEIGHT,
   CONTAINER_WIDTH,
-  calculateDaysArray,
+  CONTENT_OFFSET,
   DATE_STR_FORMAT,
   availableNumberOfDays,
-  minutesToYDimension,
-  CONTENT_OFFSET,
+  calculateDaysArray,
   getTimeLabelHeight,
+  minutesToYDimension,
 } from '../utils';
+import React, { PureComponent } from 'react';
+import { TouchableWithoutFeedback, View } from 'react-native';
 
+import Event from '../Event/Event';
+import NowLine from '../NowLine/NowLine';
+import PropTypes from 'prop-types';
+import memoizeOne from 'memoize-one';
+import moment from 'moment';
 import styles from './Events.styles';
 
 const MINUTES_IN_HOUR = 60;
@@ -184,17 +183,33 @@ class Events extends PureComponent {
   );
 
   onGridClick = (event, dayIndex) => {
-    const { initialDate, onGridClick } = this.props;
+    const { initialDate, onGridClick, totalLinesPerHour } = this.props;
     if (!onGridClick) {
       return;
     }
     const { locationY } = event.nativeEvent;
-    const hour = Math.floor(this.yToHour(locationY - CONTENT_OFFSET));
+    const totalGridLinesPerHour = totalLinesPerHour > 0 ? totalLinesPerHour - 1 : 5
+    // const hour = Math.floor(this.yToHour(locationY - CONTENT_OFFSET));
+    const time = this.roundTime(this.yToHour(locationY - CONTENT_OFFSET), 60 / totalGridLinesPerHour)
 
     const date = moment(initialDate).add(dayIndex, 'day').toDate();
 
-    onGridClick(event, hour, date);
+    onGridClick(event, time, date);
   };
+
+  roundTime = (hour, minutesToRound) => {
+    const roundedHour = Math.floor(hour);
+    const dateTime = new Date();
+    dateTime.setHours(roundedHour)
+    dateTime.setMinutes((hour - roundedHour) * 60)
+    let coeff = 1000 * 60 * minutesToRound;
+    const result = new Date(Math.round(dateTime.getTime() / coeff) * coeff);
+
+    return {
+      hour: result.getHours(),
+      minutes: result.getMinutes(),
+    };
+  }
 
   isToday = (dayIndex) => {
     const { initialDate } = this.props;
@@ -216,6 +231,7 @@ class Events extends PureComponent {
       timeStep,
       showNowLine,
       nowLineColor,
+      totalLinesPerHour,
     } = this.props;
     const totalEvents = this.processEvents(
       eventsByDate,
@@ -224,19 +240,35 @@ class Events extends PureComponent {
       rightToLeft,
     );
 
+    const totalGridLinesPerHour = totalLinesPerHour ?? 5
+
     return (
       <View style={styles.container}>
-        {times.map((time) => (
-          <View
-            key={time}
-            style={[
-              styles.timeRow,
-              { height: getTimeLabelHeight(hoursInDisplay, timeStep) },
-            ]}
-          >
-            <View style={styles.timeLabelLine} />
-          </View>
-        ))}
+        {times.map((time) => {
+          const height = getTimeLabelHeight(hoursInDisplay, timeStep)
+          return (
+            <View
+              key={time}
+              style={[
+                styles.timeRow,
+                { height, justifyContent: 'space-between' },
+              ]}
+            >
+              {Array.from(Array(totalGridLinesPerHour).keys()).map(
+                (value, index) => (
+                  <View
+                    key={value}
+                    style={
+                      index !== totalGridLinesPerHour - 1
+                        ? styles.timeLabelLine
+                        : {}
+                    }
+                  />
+                ),
+              )}
+            </View>
+          )
+        })}
         <View style={styles.events}>
           {totalEvents.map((eventsInSection, dayIndex) => (
             <TouchableWithoutFeedback
