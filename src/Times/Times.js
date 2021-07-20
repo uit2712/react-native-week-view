@@ -9,9 +9,9 @@ const Times = ({ times, hoursInDisplay, timeStep, textStyle }) => {
   const height = getTimeLabelHeight(hoursInDisplay, timeStep);
   return (
     <View style={styles.columnContainer}>
-      {times.map((time, index) => (
-        <View key={`${time} ${index}`} style={[styles.label, { height }]}>
-          <Text style={[styles.text, textStyle]}>{time}</Text>
+      {times.map(time => (
+        <View key={time.value} style={[styles.label, { height }]}>
+          <Text style={[styles.text, textStyle]}>{time.label}</Text>
         </View>
       ))}
     </View>
@@ -19,7 +19,7 @@ const Times = ({ times, hoursInDisplay, timeStep, textStyle }) => {
 };
 
 Times.propTypes = {
-  times: PropTypes.arrayOf(PropTypes.string).isRequired,
+  times: PropTypes.arrayOf(PropTypes.object).isRequired,
   hoursInDisplay: PropTypes.number.isRequired,
   timeStep: PropTypes.number.isRequired,
   textStyle: Text.propTypes.style,

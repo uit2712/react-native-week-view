@@ -10,6 +10,7 @@ import {
   CONTAINER_WIDTH,
   DATE_STR_FORMAT,
   availableNumberOfDays,
+  getPosLabelOfTime,
   setLocale,
 } from '../utils';
 import React, { Component } from 'react';
@@ -86,23 +87,16 @@ export default class WeekView extends Component {
     const times = [];
     for (let timer = 0; timer < HOURS_IN_DAY; timer++) {
       const hour = timer === 12 ? 12 : Math.floor(timer % 12);
-      const timeString = `${hour} ${this.getPosLabelOfTime(timer)}`;
-      times.push(timeString);
+      const timeString = `${hour} ${getPosLabelOfTime(timer)}`;
+      times.push({
+        value: timer,
+        label: timeString
+      });
     }
     return times;
   });
 
-  getPosLabelOfTime = memoizeOne((timer) => {
-    if (timer === 12) {
-      return 'NOON'
-    }
-
-    if (timer > 12) {
-      return 'PM'
-    }
-
-    return 'AM'
-  })
+  
 
   scrollToVerticalStart = () => {
     if (this.verticalAgenda) {
@@ -366,6 +360,7 @@ export default class WeekView extends Component {
       isShowHeader,
       isShowTitle,
       totalGridLinesPerHour,
+      selectedTimeStyle,
     } = this.props;
     const { currentMoment, initialDates } = this.state;
     const times = this.calculateTimes(timeStep);
@@ -448,6 +443,7 @@ export default class WeekView extends Component {
                     showNowLine={showNowLine}
                     nowLineColor={nowLineColor}
                     totalLinesPerHour={totalGridLinesPerHour}
+                    selectedTimeStyle={selectedTimeStyle}
                   />
                 );
               }}

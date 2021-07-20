@@ -1,4 +1,5 @@
 import { Dimensions } from 'react-native';
+import memoizeOne from 'memoize-one';
 import moment from 'moment';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -44,3 +45,15 @@ export const calculateDaysArray = (date, numberOfDays, rightToLeft) => {
   }
   return rightToLeft ? dates.reverse() : dates;
 };
+
+export const getPosLabelOfTime = memoizeOne((timer) => {
+  if (timer === 12) {
+    return 'NOON'
+  }
+
+  if (timer > 12) {
+    return 'PM'
+  }
+
+  return 'AM'
+})
