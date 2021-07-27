@@ -9,14 +9,16 @@ class Event extends React.PureComponent {
     const {
       event,
       onPress,
+      onLongPress,
       position,
       EventComponent,
       containerStyle,
     } = this.props
-    
+
     return (
       <TouchableOpacity
         onPress={() => onPress && onPress(event)}
+        onLongPress={() => onLongPress && onLongPress(event, position)}
         style={[
           styles.item,
           position,

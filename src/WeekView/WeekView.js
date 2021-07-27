@@ -2,6 +2,7 @@ import {
   Animated,
   InteractionManager,
   ScrollView,
+  TouchableWithoutFeedback,
   View,
   VirtualizedList,
 } from 'react-native';
@@ -348,6 +349,7 @@ export default class WeekView extends Component {
       eventContainerStyle,
       formatDateHeader,
       onEventPress,
+      onEventLongPress,
       events,
       hoursInDisplay,
       timeStep,
@@ -361,6 +363,7 @@ export default class WeekView extends Component {
       isShowTitle,
       totalGridLinesPerHour,
       selectedTimeStyle,
+      onPressOutside,
     } = this.props;
     const { currentMoment, initialDates } = this.state;
     const times = this.calculateTimes(timeStep);
@@ -370,56 +373,23 @@ export default class WeekView extends Component {
       (!prependMostRecent && rightToLeft);
 
     return (
-      <View style={styles.container}>
-        <View style={styles.headerContainer}>
-          {isShowTitle && <Title
-            showTitle={showTitle}
-            style={headerStyle}
-            textStyle={headerTextStyle}
-            numberOfDays={numberOfDays}
-            selectedDate={currentMoment}
-          />}
-          <VirtualizedList
-            horizontal
-            pagingEnabled
-            inverted={horizontalInverted}
-            showsHorizontalScrollIndicator={false}
-            scrollEnabled={false}
-            ref={this.headerRef}
-            data={initialDates}
-            getItem={(data, index) => data[index]}
-            getItemCount={(data) => data.length}
-            getItemLayout={(_, index) => this.getListItemLayout(index)}
-            keyExtractor={(item) => item}
-            initialScrollIndex={this.pageOffset}
-            renderItem={({ item }) => {
-              return (
-                <>
-                  {isShowHeader && <View key={item} style={styles.header}>
-                    <Header
-                      style={headerStyle}
-                      textStyle={headerTextStyle}
-                      formatDate={formatDateHeader}
-                      initialDate={item}
-                      numberOfDays={numberOfDays}
-                      rightToLeft={rightToLeft}
-                    />
-                  </View>
-                  }
-                </>
-              );
-            }}
-          />
-        </View>
-        <ScrollView ref={this.verticalAgendaRef}>
-          <View style={styles.scrollViewContent}>
-            <Times
-              times={times}
-              textStyle={hourTextStyle}
-              hoursInDisplay={hoursInDisplay}
-              timeStep={timeStep}
-            />
+      <TouchableWithoutFeedback onPress={() => onPressOutside && onPressOutside()}>
+        <View style={styles.container}>
+          <View style={styles.headerContainer}>
+            {isShowTitle && <Title
+              showTitle={showTitle}
+              style={headerStyle}
+              textStyle={headerTextStyle}
+              numberOfDays={numberOfDays}
+              selectedDate={currentMoment}
+            />}
             <VirtualizedList
+              horizontal
+              pagingEnabled
+              inverted={horizontalInverted}
+              showsHorizontalScrollIndicator={false}
+              scrollEnabled={false}
+              ref={this.headerRef}
               data={initialDates}
               getItem={(data, index) => data[index]}
               getItemCount={(data) => data.length}
@@ -428,48 +398,84 @@ export default class WeekView extends Component {
               initialScrollIndex={this.pageOffset}
               renderItem={({ item }) => {
                 return (
-                  <Events
-                    times={times}
-                    eventsByDate={eventsByDate}
-                    initialDate={item}
-                    numberOfDays={numberOfDays}
-                    onEventPress={onEventPress}
-                    onGridClick={onGridClick}
-                    hoursInDisplay={hoursInDisplay}
-                    timeStep={timeStep}
-                    EventComponent={EventComponent}
-                    eventContainerStyle={eventContainerStyle}
-                    rightToLeft={rightToLeft}
-                    showNowLine={showNowLine}
-                    nowLineColor={nowLineColor}
-                    totalLinesPerHour={totalGridLinesPerHour}
-                    selectedTimeStyle={selectedTimeStyle}
-                  />
+                  <>
+                    {isShowHeader && <View key={item} style={styles.header}>
+                      <Header
+                        style={headerStyle}
+                        textStyle={headerTextStyle}
+                        formatDate={formatDateHeader}
+                        initialDate={item}
+                        numberOfDays={numberOfDays}
+                        rightToLeft={rightToLeft}
+                      />
+                    </View>
+                    }
+                  </>
                 );
               }}
-              horizontal
-              pagingEnabled
-              inverted={horizontalInverted}
-              onMomentumScrollBegin={this.scrollBegin}
-              onMomentumScrollEnd={this.scrollEnded}
-              scrollEventThrottle={32}
-              onScroll={Animated.event(
-                [
-                  {
-                    nativeEvent: {
-                      contentOffset: {
-                        x: this.eventsGridScrollX,
-                      },
-                    },
-                  },
-                ],
-                { useNativeDriver: false },
-              )}
-              ref={this.eventsGridRef}
             />
           </View>
-        </ScrollView>
-      </View>
+          <ScrollView ref={this.verticalAgendaRef}>
+            <View style={styles.scrollViewContent}>
+              <Times
+                times={times}
+                textStyle={hourTextStyle}
+                hoursInDisplay={hoursInDisplay}
+                timeStep={timeStep}
+              />
+              <VirtualizedList
+                data={initialDates}
+                getItem={(data, index) => data[index]}
+                getItemCount={(data) => data.length}
+                getItemLayout={(_, index) => this.getListItemLayout(index)}
+                keyExtractor={(item) => item}
+                initialScrollIndex={this.pageOffset}
+                renderItem={({ item }) => {
+                  return (
+                    <Events
+                      times={times}
+                      eventsByDate={eventsByDate}
+                      initialDate={item}
+                      numberOfDays={numberOfDays}
+                      onEventPress={onEventPress}
+                      onEventLongPress={onEventLongPress}
+                      onGridClick={onGridClick}
+                      hoursInDisplay={hoursInDisplay}
+                      timeStep={timeStep}
+                      EventComponent={EventComponent}
+                      eventContainerStyle={eventContainerStyle}
+                      rightToLeft={rightToLeft}
+                      showNowLine={showNowLine}
+                      nowLineColor={nowLineColor}
+                      totalLinesPerHour={totalGridLinesPerHour}
+                      selectedTimeStyle={selectedTimeStyle}
+                    />
+                  );
+                }}
+                horizontal
+                pagingEnabled
+                inverted={horizontalInverted}
+                onMomentumScrollBegin={this.scrollBegin}
+                onMomentumScrollEnd={this.scrollEnded}
+                scrollEventThrottle={32}
+                onScroll={Animated.event(
+                  [
+                    {
+                      nativeEvent: {
+                        contentOffset: {
+                          x: this.eventsGridScrollX,
+                        },
+                      },
+                    },
+                  ],
+                  { useNativeDriver: false },
+                )}
+                ref={this.eventsGridRef}
+              />
+            </View>
+          </ScrollView>
+        </View>
+      </TouchableWithoutFeedback>
     );
   }
 }
