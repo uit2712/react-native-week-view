@@ -76,21 +76,15 @@ class Event extends React.Component {
     onPanResponderRelease: (_, gestureState) => {
       const { dy } = gestureState;
       this.onEditRelease(dy);
-      this.setEditingMode(false);
     },
     onPanResponderTerminate: () => {
       this.currentHeight.setValue(0);
       this.currentHeight.setOffset(this.props.position.height);
-      this.setEditingMode(false);
     },
   });
 
   constructor(props) {
     super(props);
-
-    this.state = {
-      isEditing: false,
-    };
 
     const { left, width, height } = props.position;
     this.currentWidth = new Animated.Value(width);
@@ -137,11 +131,11 @@ class Event extends React.Component {
   };
 
   isEditEnabled = () => {
-    return this.state.isEditing;
+    return this.props.event.isEditing;
   };
 
   isDragEnabled = () => {
-    return !!this.props.onDrag && !this.state.isEditing;
+    return !!this.props.onDrag && !this.props.event.isEditing;
   };
 
   onDragRelease = (dx, dy) => {
@@ -170,10 +164,6 @@ class Event extends React.Component {
     onEditEndDate(this.props.event, newY);
   };
 
-  setEditingMode = (isEditing) => {
-    this.setState({ isEditing });
-  };
-
   render() {
     const {
       event,
@@ -181,10 +171,10 @@ class Event extends React.Component {
       position,
       EventComponent,
       containerStyle,
+      onLongPress,
     } = this.props;
 
     const { top } = position;
-    const { isEditing } = this.state;
 
     return (
       <Animated.View
@@ -196,8 +186,8 @@ class Event extends React.Component {
             height: this.currentHeight,
             width: this.currentWidth,
             backgroundColor: event.color,
-            zIndex: isEditing ? 2 : 1,
-            opacity: isEditing ? 0.8 : 1,
+            zIndex: event.isEditing ? 2 : 1,
+            opacity: event.isEditing ? 0.8 : 1,
           },
           this.translatedByDrag.getTranslateTransform(),
           containerStyle,
@@ -209,7 +199,7 @@ class Event extends React.Component {
           style={styles.touchableContainer}
           disabled={false}
           onPress={() => onPress && onPress(event)}
-          onLongPress={() => this.setEditingMode(true)}
+          onLongPress={() => onLongPress && onLongPress(event)}
         >
           {EventComponent ? (
             <EventComponent event={event} position={position} />
@@ -217,7 +207,7 @@ class Event extends React.Component {
             <Text style={styles.description}>{event.description}</Text>
           )}
         </TouchableOpacity>
-        {isEditing && (
+        {event.isEditing && (
           <View
             style={styles.circle}
             {...this.editCirclePanResponder.panHandlers}
