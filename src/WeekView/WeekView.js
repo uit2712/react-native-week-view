@@ -298,6 +298,9 @@ export default class WeekView extends Component {
     // If an event spans through multiple days, adds the event multiple times
     const sortedEvents = {};
     events.forEach((event) => {
+      // in milliseconds
+      const originalDuration =
+        event.endDate.getTime() - event.startDate.getTime();
       const startDate = moment(event.startDate);
       const endDate = moment(event.endDate);
 
@@ -321,6 +324,7 @@ export default class WeekView extends Component {
           ...event,
           startDate: actualStartDate.toDate(),
           endDate: actualEndDate.toDate(),
+          originalDuration,
         });
       }
     });
@@ -364,6 +368,7 @@ export default class WeekView extends Component {
       totalGridLinesPerHour,
       selectedTimeStyle,
       onPressOutside,
+      onDragEvent,
     } = this.props;
     const { currentMoment, initialDates } = this.state;
     const times = this.calculateTimes(timeStep);
@@ -415,7 +420,12 @@ export default class WeekView extends Component {
               }}
             />
           </View>
-          <ScrollView ref={this.verticalAgendaRef}>
+          <ScrollView
+            ref={this.verticalAgendaRef}
+            onStartShouldSetResponderCapture={() => false}
+            onMoveShouldSetResponderCapture={() => false}
+            onResponderTerminationRequest={() => false}
+          >
             <View style={styles.scrollViewContent}>
               <Times
                 times={times}
@@ -430,6 +440,9 @@ export default class WeekView extends Component {
                 getItemLayout={(_, index) => this.getListItemLayout(index)}
                 keyExtractor={(item) => item}
                 initialScrollIndex={this.pageOffset}
+                onStartShouldSetResponderCapture={() => false}
+                onMoveShouldSetResponderCapture={() => false}
+                onResponderTerminationRequest={() => false}
                 renderItem={({ item }) => {
                   return (
                     <Events
@@ -449,6 +462,7 @@ export default class WeekView extends Component {
                       nowLineColor={nowLineColor}
                       totalLinesPerHour={totalGridLinesPerHour}
                       selectedTimeStyle={selectedTimeStyle}
+                      onDragEvent={onDragEvent}
                     />
                   );
                 }}
@@ -503,6 +517,7 @@ WeekView.propTypes = {
   prependMostRecent: PropTypes.bool,
   showNowLine: PropTypes.bool,
   nowLineColor: PropTypes.string,
+  onDragEvent: PropTypes.func,
 };
 
 WeekView.defaultProps = {

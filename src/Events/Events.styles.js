@@ -11,26 +11,21 @@ const styles = StyleSheet.create({
     width: CONTAINER_WIDTH,
   },
   timeRow: {
-    flex: 1,
+    flex: 0,
   },
   timeLabelLine: {
-    // height: 1,
-    flex: 1,
-    backgroundColor: 'white',
-    borderWidth: 1,
-    borderColor: GREY_COLOR,
-    paddingHorizontal: 10,
-    justifyContent: 'center',
-    // position: 'absolute',
-    // right: 0,
-    // left: 0,
+    height: 1,
+    backgroundColor: GREY_COLOR,
+    position: 'absolute',
+    right: 0,
+    left: 0,
   },
-  event: {
+  eventsColumn: {
     flex: 1,
     borderColor: GREY_COLOR,
     borderLeftWidth: 1,
   },
-  events: {
+  eventsContainer: {
     position: 'absolute',
     flexDirection: 'row',
     left: 0,
