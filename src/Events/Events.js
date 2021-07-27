@@ -5,11 +5,12 @@ import {
   DATE_STR_FORMAT,
   availableNumberOfDays,
   calculateDaysArray,
+  getPosLabelOfTime,
   getTimeLabelHeight,
   minutesToYDimension,
 } from '../utils';
 import React, { PureComponent } from 'react';
-import { TouchableWithoutFeedback, View } from 'react-native';
+import { Text, TouchableWithoutFeedback, View } from 'react-native';
 
 import Event from '../Event/Event';
 import NowLine from '../NowLine/NowLine';
@@ -182,19 +183,48 @@ class Events extends PureComponent {
     },
   );
 
+  state = {
+    selectedTime: null,
+  }
+
   onGridTouch = (event, dayIndex, isLong) => {
-    const { initialDate, onGridClick, onGridLongPress } = this.props;
+    const { initialDate, onGridClick, onGridLongPress, totalLinesPerHour } = this.props;
     const callback = isLong ? onGridLongPress : onGridClick;
     if (!callback) {
       return;
     }
     const { locationY } = event.nativeEvent;
-    const hour = Math.floor(this.yToHour(locationY - CONTENT_OFFSET));
+    const totalGridLinesPerHour = totalLinesPerHour > 0 ? totalLinesPerHour - 1 : 5
+    // const hour = Math.floor(this.yToHour(locationY - CONTENT_OFFSET));
+    const time = this.roundTime(this.yToHour(locationY - CONTENT_OFFSET), 60 / totalGridLinesPerHour)
 
     const date = moment(initialDate).add(dayIndex, 'day').toDate();
+    this.setState({
+      selectedTime: {
+        start: time,
+        end: {
+          minutes: time.minutes + 60 / totalGridLinesPerHour,
+          hour: Math.floor(time.hour + 1 / totalGridLinesPerHour),
+        }
+      }
+    })
 
-    callback(event, hour, date);
+    callback(event, time, date);
   };
+
+  roundTime = (hour, minutesToRound) => {
+    const roundedHour = Math.floor(hour);
+    const dateTime = new Date();
+    dateTime.setHours(roundedHour)
+    dateTime.setMinutes((hour - roundedHour) * 60)
+    let coeff = 1000 * 60 * minutesToRound;
+    const result = new Date(Math.floor(dateTime.getTime() / coeff) * coeff);
+
+    return {
+      hour: result.getHours(),
+      minutes: result.getMinutes(),
+    };
+  }
 
   onDragEvent = (event, newX, newY) => {
     const { onDragEvent } = this.props;
@@ -256,6 +286,8 @@ class Events extends PureComponent {
       timeStep,
       showNowLine,
       nowLineColor,
+      totalLinesPerHour,
+      selectedTimeStyle,
       onDragEvent,
       onEditEventEndDate,
     } = this.props;
@@ -266,19 +298,17 @@ class Events extends PureComponent {
       rightToLeft,
     );
 
+      // console.log('Events')
     return (
       <View style={styles.container}>
-        {times.map((time) => (
-          <View
-            key={time}
-            style={[
-              styles.timeRow,
-              { height: getTimeLabelHeight(hoursInDisplay, timeStep) },
-            ]}
-          >
-            <View style={styles.timeLabelLine} />
-          </View>
-        ))}
+        <GridLineList
+          times={times}
+          totalLinesPerHour={totalLinesPerHour}
+          timeStep={timeStep}
+          hoursInDisplay={hoursInDisplay}
+          selectedTime={this.state.selectedTime}
+          selectedTimeStyle={selectedTimeStyle}
+        />
         <View style={styles.eventsContainer}>
           {totalEvents.map((eventsInSection, dayIndex) => (
             <TouchableWithoutFeedback
@@ -317,6 +347,116 @@ class Events extends PureComponent {
   }
 }
 
+class GridLineList extends React.PureComponent {
+  isHighlighted = (hour, lineIndex) => {
+    return hour + lineIndex / (this.props.totalLinesPerHour - 1) === this.props.selectedTime?.start?.hour + this.props.selectedTime?.start?.minutes / 60;
+  }
+
+  render() {
+    const { times, hoursInDisplay, timeStep, totalLinesPerHour, selectedTime, selectedTimeStyle } = this.props
+    const totalGridLinesPerHour = totalLinesPerHour ?? 5
+    const listLines = Array.from(Array(totalGridLinesPerHour).keys())
+
+    return (
+      <>
+        {times.map(({ value, label }) => {
+          const height = getTimeLabelHeight(hoursInDisplay, timeStep)
+          
+          return (
+            <View
+              key={value}
+              style={[
+                styles.timeRow,
+                { height, justifyContent: 'space-between' },
+              ]}
+            >
+              {listLines.map(
+                (line, index) => (
+                  <GridLineListItem
+                    key={line}
+                    isTheLast={index === totalGridLinesPerHour - 1}
+                    isActive={this.isHighlighted(value, index)}
+                    selectedTime={selectedTime}
+                    selectedTimeStyle={selectedTimeStyle}
+                  />
+                ),
+              )}
+            </View>
+          )
+        })}
+      </>
+    )
+  }
+}
+
+class GridLineListItem extends React.Component {
+  /**
+   * 
+   * @param {object} input seconds 
+   */
+  toHHMM = ({ input, isHasTimeLabel, isShowTimeLabel }) => {
+    let sec_num = input; // don't forget the second param
+    let hours   = Math.floor(sec_num / 3600);
+    let minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+
+    let hoursStr = "";
+    if (hours >= 10) {
+      if (isHasTimeLabel) {
+        let nowHours = hours > 12 ? hours - 12 : hours;
+        hoursStr += nowHours;
+      } else {
+        hoursStr += hours;
+      }
+    } else {
+      hoursStr = "0" + hours;
+    }
+
+    let minutesStr = "";
+    if (minutes < 10) {
+      minutesStr = `0${minutes}`
+    } else {
+      minutesStr = `${minutes}`
+    }
+   
+    return `${hoursStr}:${minutesStr}${isHasTimeLabel && isShowTimeLabel ? ` ${getPosLabelOfTime(hours)}` : ''}`;
+  }
+
+  shouldComponentUpdate(nextProps) {
+    return nextProps.isActive !== this.props.isActive
+  }
+
+  render() {
+    const { isTheLast, isActive, selectedTime, selectedTimeStyle } = this.props
+    let startSeconds = 0, endSeconds = 0;
+    if (selectedTime) {
+      const { start, end } = selectedTime
+      startSeconds = start ? start.hour * 3600 + start.minutes * 60 : 0
+      endSeconds = end ? end.hour * 3600 + end.minutes * 60 : 0
+    }
+    const startTime = this.toHHMM({ input: startSeconds, isHasTimeLabel: true, isShowTimeLabel: false })
+    const endTime = this.toHHMM({ input: endSeconds, isHasTimeLabel: true, isShowTimeLabel: true })
+    
+    return (
+      <View
+        style={
+          isTheLast === false
+            ? [styles.timeLabelLine, {
+              backgroundColor: isActive ? (selectedTimeStyle.backgroundColor ?? 'red') : 'white'
+            }]
+            : {}
+        }
+      >
+        {isActive && (
+          <Text style={{
+            color: isActive ? (selectedTimeStyle.color ?? 'white') : 'black',
+            fontFamily: selectedTimeStyle.fontFamily,
+          }}>{startTime} - {endTime}</Text>
+        )}
+      </View>
+    )
+  }
+}
+
 Events.propTypes = {
   numberOfDays: PropTypes.oneOf(availableNumberOfDays).isRequired,
   eventsByDate: PropTypes.objectOf(PropTypes.arrayOf(Event.propTypes.event))
@@ -324,7 +464,7 @@ Events.propTypes = {
   initialDate: PropTypes.string.isRequired,
   hoursInDisplay: PropTypes.number.isRequired,
   timeStep: PropTypes.number.isRequired,
-  times: PropTypes.arrayOf(PropTypes.string).isRequired,
+  times: PropTypes.arrayOf(PropTypes.object).isRequired,
   onEventPress: PropTypes.func,
   onGridClick: PropTypes.func,
   eventContainerStyle: PropTypes.object,
